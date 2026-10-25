@@ -205,4 +205,27 @@ document.getElementById("app").onclick=function(e){
     if(r==="ok"||r==="copied")markB();
     setMsg(r==="ok"?"শেয়ার হয়েছে।":r==="copied"?"শেয়ার করা যায়নি, তাই টেক্সট কপি হয়েছে—নিজে পেস্ট করুন।":r==="cancel"?"":"কপি করা যায়নি।")});return}
   if(t.id==="bkCsv"){var csv="\uFEFF"+toSheet(csvRows(false),","),cf=new File([csv],"khata_backup.csv",{type:"text/csv"});
-    if(navigator.canShare&&navigator.canShare({files:[cf]})){navigator.share({files:[cf],title:"দেনা-পাওনার খাতা শিট"}).then(markB,function(){});setMsg("শেয়ার মেনু থেকে Drive বেছে নিন, তারপর Drive থেকে Google 
+    if(navigator.canShare&&navigator.canShare({files:[cf]})){navigator.share({files:[cf],title:"দেনা-পাওনার খাতা শিট"}).then(markB,function(){});setMsg("শেয়ার মেনু থেকে Drive বেছে নিন, তারপর Drive থেকে Google Sheets-এ খুলুন।")}
+    else{var cu=URL.createObjectURL(cf),ca=document.createElement("a");ca.href=cu;ca.download="khata_backup.csv";document.body.appendChild(ca);ca.click();ca.remove();markB();setMsg("ডাউনলোড শুরু না হলে ‘শিটে পেস্ট করার জন্য কপি করুন’ ব্যবহার করুন। ফাইলটি Drive-এ আপলোড করে Google Sheets-এ খুলুন।")}return}
+  if(t.id==="bkTsv"){copyText(toSheet(csvRows(true),"\t"),function(ok){if(ok)markB();setMsg(ok?"কপি হয়েছে। Google Sheets-এ নতুন শিট খুলে A1 ঘরে পেস্ট করুন; শিটটি আপনার Drive-এ জমা হবে।":"কপি করা যায়নি।")});return}
+  if(t.id==="bkCopy"){copyText(backupText(),function(ok){if(ok)markB();setMsg(ok?"কপি হয়েছে। এবার ইমেইল বা নোটে পেস্ট করুন।":"কপি করা যায়নি।")});return}
+  if(t.id==="bkRestore"){var v=document.getElementById("bk").value,i=v.indexOf("---BACKUP---"),j=v.indexOf("---END---"),arr=null;
+    if(i<0||j<i){arr=parseSheet(v);if(!arr){setMsg("ব্যাকআপ টেক্সট বা শিটের লেখা পাওয়া যায়নি। ইমেইল/শিট থেকে পুরোটা কপি করুন।");return}}
+    else{try{arr=JSON.parse(v.slice(i+12,j))}catch(x){arr=null}}
+    if(!Array.isArray(arr)||arr.some(function(p){return !p||typeof p.name!=="string"||!Array.isArray(p.entries)})){setMsg("ব্যাকআপ টেক্সট ঠিক নেই। পুরোটা কপি করেছেন কি না দেখুন।");return}
+    if(!rArmed){rArmed=true;setMsg("সতর্কতা: এতে বর্তমান সব তথ্য প্রতিস্থাপিত হবে। নিশ্চিত হলে আবার চাপুন।");return}
+    rArmed=false;arr.forEach(function(q){var o=find(q.id)||people.filter(function(x){return x.name===q.name})[0];if(o&&o.photo)q.photo=o.photo});people=arr;save();draw();setMsg("পুনরুদ্ধার সম্পূর্ণ হয়েছে।");return}
+  if(t.id==="shareP"){var sp=find(cur);if(!sp)return;
+    shareText(summary(sp),sp.name+" – হিসাব",function(r){t.textContent=r==="ok"?"শেয়ার হয়েছে ✓":r==="copied"?"কপি হয়েছে ✓ (পেস্ট করে পাঠান)":r==="cancel"?"এই ব্যক্তির হিসাব শেয়ার করুন":"শেয়ার করা যায়নি"});return}
+  var k=t.getAttribute("data-add");
+  if(k){var a=parseFloat(document.getElementById("ea").value);if(!(a>0)){document.getElementById("ea").focus();return}
+    var p=find(cur);p.entries.push({id:Date.now(),date:document.getElementById("ed").value||today(),note:document.getElementById("en").value.trim(),kind:k,amt:a});save();draw();return}
+  var de=t.getAttribute("data-de");
+  if(de){var q=find(cur);q.entries=q.entries.filter(function(x){return String(x.id)!==de});save();draw();return}
+  if(t.id==="delP"){if(!armed){armed=true;draw();return}
+    people=people.filter(function(x){return String(x.id)!==String(cur)});save();view="home";armed=false;draw()}
+};
+load();draw();
+</script>
+</body>
+</html>
